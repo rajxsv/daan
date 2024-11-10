@@ -72,11 +72,11 @@ const AddPost = () => {
 
     uploadBytes(storageRef, blob)
       .then((snapshot) => {
-        // console.log("Uploaded a blob or file!");
+        console.log("Uploaded a blob or file!");
       })
       .then((resp) => {
         getDownloadURL(storageRef).then(async (downloadURL) => {
-          // console.log(downloadURL)
+          console.log(downloadURL);
           value.image = downloadURL;
           value.userName = user.fullName;
           value.userEmail = user.primaryEmailAddress.emailAddress;
@@ -107,7 +107,7 @@ const AddPost = () => {
             userName: "",
             userEmail: "",
             userImage: "",
-            createdAt:Date.now()
+            createdAt: Date.now(),
           }}
           onSubmit={(value) => onSubmitMethod(value)}
           validate={(values) => {

@@ -3,9 +3,15 @@ import React, { useEffect, useState } from "react";
 import Header from "../Components/HomeScreen/Header";
 import Sliders from "../Components/HomeScreen/Sliders";
 import { app } from "../../firebaseConfig";
-import { getFirestore, collection, getDocs, onSnapshot } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 import Categories from "../Components/HomeScreen/Categories";
 import LatestItemList from "../Components/HomeScreen/LatestItemList";
+import CityLocation from "../Components/HomeScreen/CityLocation"; // Import the new CityLocation component
 
 const Home = () => {
   const db = getFirestore(app);
@@ -17,7 +23,7 @@ const Home = () => {
   useEffect(() => {
     const unsubscribe = getSliders();
     getCategoryList();
-    return () => unsubscribe(); // Cleanup function to unsubscribe from snapshot listener
+    return () => unsubscribe();
   }, []);
 
   const getSliders = () => {
@@ -28,7 +34,7 @@ const Home = () => {
       });
       setSliderList(sliders);
     });
-    return unsubscribe; // Return the unsubscribe function
+    return unsubscribe;
   };
 
   const getCategoryList = async () => {
@@ -45,17 +51,18 @@ const Home = () => {
       });
       setLatestItemList(latestItems);
     });
-    return unsubscribe; // Return the unsubscribe function
+    return unsubscribe;
   };
 
   useEffect(() => {
     const unsubscribe = getLatestItemList();
-    return () => unsubscribe(); // Cleanup function to unsubscribe from snapshot listener
-  }, []); // Run only once when component mounts
+    return () => unsubscribe();
+  }, []);
 
   return (
     <ScrollView className="py-8 px-6 bg-white flex-1">
       <Header />
+      <CityLocation />
       <Sliders sliderList={sliderList} />
       <Categories categoryList={categoryList} />
       <LatestItemList
