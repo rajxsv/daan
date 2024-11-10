@@ -7,7 +7,7 @@ const Stack = createStackNavigator();
 
 export default function HomeScreenNavigation() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName="home">
       <Stack.Screen
         name="home"
         component={Home}
@@ -34,7 +34,7 @@ export default function HomeScreenNavigation() {
             backgroundColor: "#3b82f6",
           },
           headerTintColor: "#fff",
-          headerTitle:'Detail'
+          headerTitle: "Detail",
         }}
       />
     </Stack.Navigator>
