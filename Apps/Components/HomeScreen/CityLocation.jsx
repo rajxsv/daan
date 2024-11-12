@@ -58,23 +58,23 @@ const CityLocation = () => {
 
 const styles = StyleSheet.create({
   cityText: {
-    fontSize: 18, // Slightly larger text for readability
-    color: "#666", // Darker gray for better contrast
+    fontSize: 18,
+    color: "#666", 
     textAlign: "center",
-    fontWeight: "500", // Semi-bold for emphasis
-    marginBottom: 12, // Slightly larger margin for spacing
-    letterSpacing: 0.5, // Adds space between letters for better readability
+    fontWeight: "500", 
+    marginBottom: 12, 
+    letterSpacing: 0.5, 
   },
   picker: {
     height: 50,
-    width: 250, // Wider to fit more text comfortably
+    width: 250,
     alignSelf: "center",
-    backgroundColor: "#f5f5f5", // Light background to make it stand out
-    borderRadius: 10, // Rounded corners for a modern look
-    borderWidth: 1, // Adds a light border
-    borderColor: "#ccc", // Subtle border color for definition
-    paddingHorizontal: 10, // Horizontal padding for content
-    justifyContent: "center", // Center content vertically
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10, 
+    borderWidth: 1,
+    borderColor: "#ccc", 
+    paddingHorizontal: 10, 
+    justifyContent: "center", 
   },
 });
 
