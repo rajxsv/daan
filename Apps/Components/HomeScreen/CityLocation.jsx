@@ -58,23 +58,23 @@ const CityLocation = () => {
 
 const styles = StyleSheet.create({
   cityText: {
-    fontSize: 18,
-    color: "#666", 
+    fontSize: 18, 
+    color: "#666",
     textAlign: "center",
-    fontWeight: "500", 
+    fontWeight: "500",
     marginBottom: 12, 
-    letterSpacing: 0.5, 
+    letterSpacing: 0.5,
   },
   picker: {
     height: 50,
     width: 250,
     alignSelf: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f5f5f5", 
     borderRadius: 10, 
-    borderWidth: 1,
+    borderWidth: 1, 
     borderColor: "#ccc", 
     paddingHorizontal: 10, 
-    justifyContent: "center", 
+    justifyContent: "center",
   },
 });
 
