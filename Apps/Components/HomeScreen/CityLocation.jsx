@@ -8,7 +8,7 @@ const CityLocation = () => {
   const [city, setCity] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [selectedCity, setSelectedCity] = useState("Fetching city...");
-  const predefinedCities = ["Maqsudan", "Kapurthala", "Faridkot"];
+  const predefinedCities = ["Maqsudan", "Bidipur", "Kartatpur"];
 
   useEffect(() => {
     const fetchCity = async () => {
