@@ -32,13 +32,16 @@ service cloud.firestore {
 
       // Rules for the 'messages' subcollection within each chat room
       match /messages/{messageId} {
-        // Allow read and list (get, list) if the user is authenticated and part of the chat room
-        allow get, list: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid);
+        // Allow read and list (get, list) if the user is authenticated, the chat room exists,
+        // and the user's UID is in the participantIds array of the chat room.
+        allow get, list: if request.auth != null &&
+                            exists(/databases/$(database)/documents/chats/$(chatRoomId)) &&
+                            request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participantIds;
 
         // Allow create (write) if the user is authenticated, part of the chat room,
         // the senderId matches the user's UID, and the message structure is valid.
         allow create: if request.auth != null &&
-                         isUserPartOfChat(chatRoomId, request.auth.uid) &&
+                         (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participantIds) &&
                          request.resource.data.senderId == request.auth.uid &&
                          request.resource.data.text is string &&
                          request.resource.data.text.size() > 0 && // Ensure text is not empty
