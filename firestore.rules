@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if a user is part of a chat room
+    // chatRoomId is expected to be in the format "uid1_uid2" where uids are sorted
+    function isUserPartOfChat(chatRoomId, userId) {
+      let parts = chatRoomId.split('_');
+      return parts[0] == userId || parts[1] == userId;
+    }
+
+    // Rules for the 'chats' collection
+    match /chats/{chatRoomId} {
+      // Allow creation of a chat room document if the user is part of the chatRoomId
+      // This is a simplified rule for chat room creation.
+      // Reads are allowed if user is part of chat for message fetching context.
+      allow read, create: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid);
+      
+      // Generally, direct updates or deletes to the chat room document itself might be disallowed
+      // or restricted to specific admin roles or functions. For now, no updates/deletes.
+      allow update, delete: if false;
+
+      // Rules for the 'messages' subcollection within each chat room
+      match /messages/{messageId} {
+        // Allow read and list (get, list) if the user is authenticated and part of the chat room
+        allow get, list: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid);
+
+        // Allow create (write) if the user is authenticated, part of the chat room,
+        // the senderId matches the user's UID, and the message structure is valid.
+        allow create: if request.auth != null &&
+                         isUserPartOfChat(chatRoomId, request.auth.uid) &&
+                         request.resource.data.senderId == request.auth.uid &&
+                         request.resource.data.text is string &&
+                         request.resource.data.text.size() > 0 && // Ensure text is not empty
+                         request.resource.data.createdAt == request.time; // Ensure createdAt is server timestamp
+
+        // Disallow update and delete of messages for now
+        allow update, delete: if false;
+      }
+    }
+  }
+}
