@@ -7,6 +7,7 @@ import Home from "../Screens/Home";
 import AddPost from "../Screens/AddPost";
 import Profile from "../Screens/Profile";
 import HomeScreenNavigation from "./HomeScreenNavigation";
+import ChatScreen from "../Screens/ChatScreen"; // Import ChatScreen
 
 const Tab = createBottomTabNavigator();
 
@@ -62,6 +63,21 @@ export default function TabNavigation() {
           ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* New Chat Tab */}
+      <Tab.Screen
+        name="chats"
+        component={ChatScreen}
+        options={{
+          tabBarLabel: ({ color }) => (
+            <Text style={{ color: color, fontSize: 12, marginBottom: 3 }}>
+              Chats
+            </Text>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
         }}
       />

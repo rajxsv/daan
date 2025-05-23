@@ -15,3 +15,16 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
+
+// Initialize Firestore
+export const db = getFirestore(app);
+
+// Database structure for chat messages:
+// chats (collection)
+//  └─ chat_id (document)
+//     ├─ messages (collection)
+//     │  └─ message_id (document)
+//     │     ├─ text (string)
+//     │     ├─ timestamp (timestamp)
+//     │     └─ userId (string)
+//     └─ users (array of user IDs)

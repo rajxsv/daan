@@ -1,20 +1,40 @@
 import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
-import { useRoute } from "@react-navigation/native";
-import * as Linking from 'expo-linking';
+import { useRoute, useNavigation } from "@react-navigation/native"; // Import useNavigation
 
 const ProductDetail = () => {
   const { params } = useRoute();
   const [product, setProduct] = useState([]);
+  const navigation = useNavigation(); // Get navigation object
 
   useEffect(() => {
     params && setProduct(params.product);
-  }, []);
+    // Ensure product has an id, if not, this is a placeholder for where you might fetch it or assign one
+    if (params && params.product && !params.product.id) {
+      // console.warn("Product does not have an ID. Using title for chatId generation.");
+    }
+  }, [params]);
 
-  const sendEmailMessage = () => {
-    const subject = 'Regarding ' + product.title;
-    const body = "Hi " + product.userName + "\n" + "I am interested in this item.";
-    Linking.openURL('mailto:' + product.userEmail + "?subject=" + subject + "&body=" + body);
+  const navigateToConversation = () => {
+    // Use product.id if available, otherwise fallback to product.title
+    // A more robust solution would ensure unique IDs for both product and user
+    const productId = product.id || product.title; 
+    // Assuming product.userEmail is the seller's unique identifier for now
+    // In a real app, you might want to use a current user ID from auth state.
+    const sellerId = product.userEmail; 
+    
+    if (!sellerId) {
+      console.error("Seller email is not available. Cannot create chatId.");
+      // Optionally, show an alert to the user
+      return;
+    }
+
+    // For simplicity, creating a chatId. This should ideally be managed by a backend or Firebase.
+    // Example: "productId_sellerEmail_buyerId" (buyerId could be from auth state)
+    // For now, let's use "productId_sellerEmail" as a placeholder
+    const chatId = `${productId}_${sellerId}`; 
+
+    navigation.navigate('ConversationScreen', { chatId: chatId });
   };
 
   const data = [
@@ -55,7 +75,7 @@ const ProductDetail = () => {
     if (item.key === 'button') {
       return (
         <TouchableOpacity
-          onPress={sendEmailMessage}
+          onPress={navigateToConversation} // Updated onPress handler
           className="z-40 bg-blue-500 p-4 m-2 rounded-lg"
         >
           <Text className="text-center text-white">Send Message</Text>
