@@ -36,14 +36,7 @@ service cloud.firestore {
       
       // Allow creation of a chat room document if the user is part of the chatRoomId,
       // and the participantIds field is correctly populated and validated.
-      allow create: if request.auth != null &&
-                       isUserPartOfChat(chatRoomId, request.auth.uid) &&
-                       request.resource.data.participantIds is list &&
-                       request.resource.data.participantIds.size() == 2 &&
-                       request.auth.uid in request.resource.data.participantIds &&
-                       // Ensure the participantIds in the array match the chatRoomId parts
-                       (chatRoomId.split('_')[0] in request.resource.data.participantIds) &&
-                       (chatRoomId.split('_')[1] in request.resource.data.participantIds);
+      allow create: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid) && request.resource.data.participantIds is list && request.resource.data.participantIds.size() == 2 && request.auth.uid in request.resource.data.participantIds;
       
       // Generally, direct updates or deletes to the chat room document itself might be disallowed
       // or restricted to specific admin roles or functions. For now, no updates/deletes.
@@ -53,18 +46,11 @@ service cloud.firestore {
       match /messages/{messageId} {
         // Allow read and list (get, list) if the user is authenticated, the chat room exists,
         // and the user's UID is in the participantIds array of the chat room.
-        allow get, list: if request.auth != null &&
-                            exists(/databases/$(database)/documents/chats/$(chatRoomId)) &&
-                            request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participantIds;
+        allow get, list: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid);
 
         // Allow create (write) if the user is authenticated, part of the chat room,
         // the senderId matches the user's UID, and the message structure is valid.
-        allow create: if request.auth != null &&
-                         (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participantIds) &&
-                         request.resource.data.senderId == request.auth.uid &&
-                         request.resource.data.text is string &&
-                         request.resource.data.text.size() > 0 && // Ensure text is not empty
-                         request.resource.data.createdAt == request.time; // Ensure createdAt is server timestamp
+        allow create: if request.auth != null && isUserPartOfChat(chatRoomId, request.auth.uid) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.createdAt == request.time;
 
         // Disallow update and delete of messages for now
         allow update, delete: if false;
