@@ -24,6 +24,17 @@ const PostItem = ({item}) => {
                 {item.category}
               </Text>
             </View>
+            {/* "Message Poster" button */}
+            <TouchableOpacity
+              onPress={() => {
+                // Use item.user_id or item.userId if available, otherwise use a placeholder
+                const userId = item.user_id || item.userId || 'POSTER_ID_PLACEHOLDER'; 
+                navigation.push('chat-screen', { userId });
+              }}
+              className='mt-2 p-2 bg-purple-500 rounded-lg'
+            >
+              <Text className='text-white text-center'>Message Poster</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
   )
 }
