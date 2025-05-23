@@ -1,17 +1,12 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 import Header from "../Components/HomeScreen/Header";
 import Sliders from "../Components/HomeScreen/Sliders";
 import { app } from "../../firebaseConfig";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  onSnapshot,
-} from "firebase/firestore";
+import { getFirestore, collection, getDocs, onSnapshot } from "firebase/firestore";
 import Categories from "../Components/HomeScreen/Categories";
 import LatestItemList from "../Components/HomeScreen/LatestItemList";
-import CityLocation from "../Components/HomeScreen/CityLocation"; // Import the new CityLocation component
+import CityLocation from "../Components/HomeScreen/CityLocation";
 
 const Home = () => {
   const db = getFirestore(app);
@@ -23,6 +18,7 @@ const Home = () => {
   useEffect(() => {
     const unsubscribe = getSliders();
     getCategoryList();
+    getLatestItemList();
     return () => unsubscribe();
   }, []);
 
@@ -54,22 +50,37 @@ const Home = () => {
     return unsubscribe;
   };
 
-  useEffect(() => {
-    const unsubscribe = getLatestItemList();
-    return () => unsubscribe();
-  }, []);
+  const data = [
+    { key: 'header' },
+    { key: 'slider' },
+    { key: 'categories' },
+    { key: 'location' },
+    { key: 'latestItems' }
+  ];
+
+  const renderItem = ({ item }) => {
+    switch (item.key) {
+      case 'header':
+        return <Header />;
+      case 'slider':
+        return <Sliders sliderList={sliderList} />;
+      case 'categories':
+        return <Categories categoryList={categoryList} />;
+      case 'location':
+        return <CityLocation />;
+      case 'latestItems':
+        return <LatestItemList latestItemList={latestItemList} />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <ScrollView className="py-8 px-6 bg-white flex-1">
-      <Header />
-      <CityLocation />
-      <Sliders sliderList={sliderList} />
-      <Categories categoryList={categoryList} />
-      <LatestItemList
-        latestItemList={latestItemList}
-        heading={"Contributions"}
-      />
-    </ScrollView>
+    <FlatList
+      data={data}
+      renderItem={renderItem}
+      keyExtractor={item => item.key}
+    />
   );
 };
 
