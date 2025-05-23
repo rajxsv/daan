@@ -81,6 +81,7 @@ const AddPost = () => {
           value.userName = user.fullName;
           value.userEmail = user.primaryEmailAddress.emailAddress;
           value.userImage = user.imageUrl;
+          value.userId = user.id; // Added userId field
           const docRef = await addDoc(collection(db, "UserPost"), value);
           if (docRef.id) {
             setLoading(false);
@@ -107,6 +108,7 @@ const AddPost = () => {
             userName: "",
             userEmail: "",
             userImage: "",
+            userId: "", // Added userId to initialValues
             createdAt: Date.now(),
           }}
           onSubmit={(value) => onSubmitMethod(value)}

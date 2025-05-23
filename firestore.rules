@@ -3,6 +3,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Rules for the 'Sliders' collection
+    match /Sliders/{sliderId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Rules for the 'Category' collection
+    match /Category/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Rules for the 'UserPost' collection
+    match /UserPost/{userPostId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.userId;
+    }
+
     // Helper function to check if a user is part of a chat room
     // chatRoomId is expected to be in the format "uid1_uid2" where uids are sorted
     function isUserPartOfChat(chatRoomId, userId) {
