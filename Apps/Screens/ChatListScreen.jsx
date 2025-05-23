@@ -1,33 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useUser } from '@clerk/clerk-expo'; // Import useUser
 import { app } from '../../firebaseConfig'; // Ensure firebaseConfig.js is correctly set up
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 
 const ChatListScreen = () => {
   const navigation = useNavigation();
+  const { user } = useUser(); // Get the user object from Clerk
   const [chatRooms, setChatRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Placeholder for the current user's ID - replace with actual authenticated user ID
-  const CURRENT_USER_ID_PLACEHOLDER = 'CURRENT_USER_ID_PLACEHOLDER'; 
 
   const db = getFirestore(app);
 
   useEffect(() => {
     const fetchChatRooms = async () => {
+      if (!user || !user.id) { // Check if user and user.id are available
+        setIsLoading(false);
+        setChatRooms([]); // Clear chat rooms if user is not available
+        return;
+      }
       setIsLoading(true);
+      const currentUserId = user.id; // Use actual user ID
+
       try {
         const chatsRef = collection(db, 'chats');
         // Query for chat rooms where the participantIds array contains the current user's ID
-        const q = query(chatsRef, where('participantIds', 'array-contains', CURRENT_USER_ID_PLACEHOLDER));
+        const q = query(chatsRef, where('participantIds', 'array-contains', currentUserId));
         
         const querySnapshot = await getDocs(q);
         const rooms = [];
         querySnapshot.forEach(doc => {
           const data = doc.data();
           // Determine the other user's ID
-          const otherUserId = data.participantIds.find(id => id !== CURRENT_USER_ID_PLACEHOLDER);
+          const otherUserId = data.participantIds.find(id => id !== currentUserId);
           if (otherUserId) { // Ensure there is an other user
             rooms.push({
               id: doc.id, // Firestore document ID, which is the chatRoomId
@@ -45,13 +51,23 @@ const ChatListScreen = () => {
     };
 
     fetchChatRooms();
-  }, [db]); // Rerun if db instance changes, though typically it won't
+  }, [db, user]); // Rerun if db instance or user changes
 
   const handlePressChat = (otherUserId) => {
     // Navigate to ChatScreen, passing the other user's ID as userId
     navigation.navigate('ChatScreen', { userId: otherUserId });
   };
 
+  if (!user) {
+    // User is not loaded yet or not signed in.
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color="#6200ee" />
+        <Text>Loading user data...</Text>
+      </SafeAreaView>
+    );
+  }
+  
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centered}>
@@ -66,6 +82,7 @@ const ChatListScreen = () => {
       <SafeAreaView style={styles.centered}>
         <Text style={styles.infoText}>No chats found.</Text>
         <Text style={styles.subInfoText}>Start a new conversation to see it here.</Text>
+        {!user.id && <Text style={styles.subInfoText}>Make sure you are signed in.</Text>}
       </SafeAreaView>
     );
   }

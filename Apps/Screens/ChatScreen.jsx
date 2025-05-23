@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import { useUser } from '@clerk/clerk-expo'; // Import useUser
 import { app } from '../../firebaseConfig'; // Ensure firebaseConfig.js is correctly set up
 import { 
   getFirestore, 
@@ -15,25 +16,27 @@ import {
 const ChatScreen = ({ route }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const { user } = useUser(); // Get the user object from Clerk
   // Retrieve posterId from route params, default to 'Unknown User' if not found
   const { userId: posterId } = route.params || { userId: 'Unknown User' }; 
 
-  // Placeholder for the current user's ID - replace with actual authenticated user ID
-  const CURRENT_USER_ID_PLACEHOLDER = 'CURRENT_USER_ID_PLACEHOLDER'; 
-
   const db = getFirestore(app);
+
+  // Determine currentUserId, ensuring user object is available
+  const currentUserId = user ? user.id : null;
 
   // Function to generate a unique chat room ID
   const getChatRoomId = (userId1, userId2) => {
+    if (!userId1 || !userId2) return null; // Return null if any ID is missing
     const ids = [userId1, userId2].sort();
     return ids.join('_');
   };
 
-  const chatRoomId = getChatRoomId(CURRENT_USER_ID_PLACEHOLDER, posterId);
+  const chatRoomId = getChatRoomId(currentUserId, posterId);
 
   // Listen for messages from Firestore in real-time
   useEffect(() => {
-    if (!chatRoomId) return;
+    if (!chatRoomId || !currentUserId) return; // Also check currentUserId
 
     const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
@@ -56,13 +59,13 @@ const ChatScreen = ({ route }) => {
   }, [chatRoomId, db]); // Rerun if chatRoomId or db changes
 
   const handleSend = async () => {
-    if (message.trim() === '' || !chatRoomId) return;
+    if (message.trim() === '' || !chatRoomId || !currentUserId) return; // Also check currentUserId
 
     const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
     try {
       await addDoc(messagesRef, {
         text: message.trim(),
-        senderId: CURRENT_USER_ID_PLACEHOLDER,
+        senderId: currentUserId, // Use actual user ID
         createdAt: serverTimestamp(),
       });
       setMessage('');
@@ -75,7 +78,7 @@ const ChatScreen = ({ route }) => {
   };
 
   const renderMessageItem = ({ item }) => {
-    const isCurrentUser = item.senderId === CURRENT_USER_ID_PLACEHOLDER;
+    const isCurrentUser = item.senderId === currentUserId; // Use actual user ID
     return (
       <View 
         style={[
@@ -88,6 +91,35 @@ const ChatScreen = ({ route }) => {
       </View>
     );
   };
+
+  if (!user) {
+    // User is not loaded yet or not signed in.
+    // You might want to render a loading spinner or a message.
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Loading chat...</Text>
+        </View>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text>Please wait or sign in to view the chat.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!chatRoomId) {
+    // This might happen if currentUserId or posterId is missing.
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Chat Unavailable</Text>
+        </View>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text>Cannot initialize chat. User IDs are missing.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
