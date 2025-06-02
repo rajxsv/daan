@@ -3,24 +3,21 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  Button,
   TouchableOpacity,
   Image,
-  ToastAndroid,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
+  ToastAndroid,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { app } from "../../firebaseConfig";
-import { addDoc, getFirestore } from "firebase/firestore";
-import { collection, getDocs } from "firebase/firestore";
+import { addDoc, getFirestore, collection, getDocs } from "firebase/firestore";
 import { Formik } from "formik";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";
 import { useUser } from "@clerk/clerk-expo";
 
 const AddPost = () => {
@@ -31,66 +28,99 @@ const AddPost = () => {
   const { user } = useUser();
 
   const [categoryList, setCategoryList] = useState([]);
+
   useEffect(() => {
     getCategoryList();
+    checkPermissions();
   }, []);
+
+  const checkPermissions = async () => {
+    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (newStatus !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Sorry, we need camera roll permissions to upload images!'
+        );
+      }
+    }
+  };
+
   const getCategoryList = async () => {
     setCategoryList([]);
     const querySnapshot = await getDocs(collection(db, "Category"));
     querySnapshot.forEach((doc) => {
-      // console.log("docs " ,doc.data());
       setCategoryList((categoryList) => [...categoryList, doc.data()]);
     });
   };
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
+    try {
+      // Request permission to access media library
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Required", "Permission to access camera roll is required!");
+        return;
+      }
 
-    // console.log(result);
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'All', // Use string instead of enum for compatibility
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+        allowsMultipleSelection: false,
+      });
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      console.log('Image picker result:', result); // Debug log
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Image picker error:", error);
+      Alert.alert("Error", "Failed to open image picker: " + error.message);
     }
   };
 
   const onSubmitMethod = async (value) => {
-    setLoading(true);
-    // value.image = image;
-    // console.log(value);
+    try {
+      setLoading(true);
 
-    //Convert uri to Blob File
-    const res = await fetch(image);
-    const blob = await res.blob();
+      if (!image) {
+        Alert.alert("Please select an image first.");
+        setLoading(false);
+        return;
+      }
 
-    const storageRef = ref(storage, "communityPost/" + Date.now() + ".jpg");
+      const res = await fetch(image);
+      const blob = await res.blob();
 
-    uploadBytes(storageRef, blob)
-      .then((snapshot) => {
-        console.log("Uploaded a blob or file!");
-      })
-      .then((resp) => {
-        getDownloadURL(storageRef).then(async (downloadURL) => {
-          console.log(downloadURL);
-          value.image = downloadURL;
-          value.userName = user.fullName;
-          value.userEmail = user.primaryEmailAddress.emailAddress;
-          value.userImage = user.imageUrl;
-          value.userId = user.id; // Added userId field
-          const docRef = await addDoc(collection(db, "UserPost"), value);
-          if (docRef.id) {
-            setLoading(false);
-            // console.log('Document Added')
-            Alert.alert("Successfully Donated Item.");
-          }
-        });
-      });
+      const storageRef = ref(storage, "communityPost/" + Date.now() + ".jpg");
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      value.image = downloadURL;
+      value.userName = user.fullName;
+      value.userEmail = user.primaryEmailAddress.emailAddress;
+      value.userImage = user.imageUrl;
+      value.userId = user.id;
+      value.createdAt = Date.now();
+
+      const docRef = await addDoc(collection(db, "UserPost"), value);
+
+      if (docRef.id) {
+        Alert.alert("Successfully Donated Item.");
+      }
+    } catch (err) {
+      console.error("Submission Error:", err);
+      Alert.alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <KeyboardAvoidingView>
       <ScrollView className="p-10">
@@ -104,19 +134,13 @@ const AddPost = () => {
             desc: "",
             category: "",
             city: "",
-            image: "",
-            userName: "",
-            userEmail: "",
-            userImage: "",
-            createdAt: Date.now(),
           }}
           onSubmit={(value) => onSubmitMethod(value)}
           validate={(values) => {
             const errors = {};
             if (!values.title) {
-              // console.log("Title Not Present");
               ToastAndroid.show("Title is Mandatory", ToastAndroid.SHORT);
-              errors.name = "Title is Mandatory";
+              errors.title = "Title is Mandatory";
             }
             return errors;
           }}
@@ -127,7 +151,6 @@ const AddPost = () => {
             handleSubmit,
             values,
             setFieldValue,
-            errors,
           }) => (
             <View>
               <TouchableOpacity onPress={pickImage}>
@@ -157,10 +180,8 @@ const AddPost = () => {
                 numberOfLines={5}
                 onChangeText={handleChange("desc")}
               />
-              {/* Category List Dropdown */}
               <View style={{ borderWidth: 1, borderRadius: 10, marginTop: 15 }}>
                 <Picker
-                  className="border-2"
                   selectedValue={values?.category}
                   onValueChange={(itemValue) =>
                     setFieldValue("category", itemValue)
@@ -188,7 +209,7 @@ const AddPost = () => {
                   backgroundColor: loading ? "#ccc" : "#007BFF",
                 }}
                 disabled={loading}
-                className="p-4 bg-blue-500 rounded-full mt-10"
+                className="p-4 rounded-full mt-10"
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
@@ -198,7 +219,6 @@ const AddPost = () => {
                   </Text>
                 )}
               </TouchableOpacity>
-              {/* <Button onPress={handleSubmit} title="submit" className = 'mt-7'/> */}
             </View>
           )}
         </Formik>

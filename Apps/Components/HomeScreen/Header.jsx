@@ -25,7 +25,6 @@ const Header = () => {
           onChangeText={(value) => console.log(value)}
         />
       </View>
-
     </View>
   );
 };

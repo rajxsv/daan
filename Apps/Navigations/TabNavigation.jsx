@@ -30,18 +30,6 @@ export default function TabNavigation() {
           ),
         }}
       />
-      <Tab.Screen name="explore" component={Explore} 
-        options={{
-          tabBarLabel: ({ color }) => (
-            <Text style={{ color: color, fontSize: 12, marginBottom: 3 }}>
-              Explore
-            </Text>
-          ),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size} color={color} />
-          ),
-        }}
-      />
       <Tab.Screen name="addpost" component={AddPost} 
         options={{
           tabBarLabel: ({ color }) => (
