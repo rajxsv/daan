@@ -73,21 +73,26 @@ const AddPost = () => {
     uploadBytes(storageRef, blob)
       .then((snapshot) => {
         console.log("Uploaded a blob or file!");
+        return getDownloadURL(storageRef); // Return the promise for the next then block
       })
-      .then((resp) => {
-        getDownloadURL(storageRef).then(async (downloadURL) => {
-          console.log(downloadURL);
-          value.image = downloadURL;
-          value.userName = user.fullName;
-          value.userEmail = user.primaryEmailAddress.emailAddress;
-          value.userImage = user.imageUrl;
-          const docRef = await addDoc(collection(db, "UserPost"), value);
-          if (docRef.id) {
-            setLoading(false);
-            // console.log('Document Added')
-            Alert.alert("Successfully Donated Item.");
-          }
-        });
+      .then(async (downloadURL) => {
+        console.log(downloadURL);
+        value.image = downloadURL;
+        value.userName = user.fullName;
+        value.userEmail = user.primaryEmailAddress.emailAddress;
+        value.userImage = user.imageUrl;
+        value.userId = user.id;
+        const docRef = await addDoc(collection(db, "UserPost"), value);
+        if (docRef.id) {
+          Alert.alert("Successfully Donated Item.");
+        }
+      })
+      .catch((error) => { // Add a catch block to handle errors
+        console.error("Error uploading post: ", error);
+        Alert.alert("Error", "Failed to donate item. Please try again.");
+      })
+      .finally(() => { // Add a finally block to ensure setLoading(false) is always called
+        setLoading(false);
       });
   };
   return (
@@ -107,6 +112,7 @@ const AddPost = () => {
             userName: "",
             userEmail: "",
             userImage: "",
+            userId: "", // Added userId to initialValues
             createdAt: Date.now(),
           }}
           onSubmit={(value) => onSubmitMethod(value)}
@@ -129,7 +135,7 @@ const AddPost = () => {
             errors,
           }) => (
             <View>
-              <TouchableOpacity onPress={pickImage}>
+              <TouchableOpacity onPress={pickImage} testID="image-picker-touchable">
                 {image ? (
                   <Image
                     source={{ uri: image }}

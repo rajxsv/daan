@@ -7,6 +7,7 @@ import Home from "../Screens/Home";
 import AddPost from "../Screens/AddPost";
 import Profile from "../Screens/Profile";
 import HomeScreenNavigation from "./HomeScreenNavigation";
+import ChatListScreen from '../Screens/ChatListScreen'; // Import ChatListScreen
 
 const Tab = createBottomTabNavigator();
 
@@ -50,6 +51,21 @@ export default function TabNavigation() {
           ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="camera" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Chat List Screen Tab */}
+      <Tab.Screen 
+        name="chat-list" 
+        component={ChatListScreen} 
+        options={{
+          tabBarLabel: ({ color }) => (
+            <Text style={{ color: color, fontSize: 12, marginBottom: 3 }}>
+              Chats
+            </Text>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
         }}
       />
