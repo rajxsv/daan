@@ -14,6 +14,7 @@ const Home = () => {
   const [sliderList, setSliderList] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
   const [latestItemList, setLatestItemList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const unsubscribe = getSliders();
@@ -50,6 +51,10 @@ const Home = () => {
     return unsubscribe;
   };
 
+  const filteredItems = latestItemList.filter(item =>
+    item.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const data = [
     { key: 'header' },
     { key: 'slider' },
@@ -61,7 +66,7 @@ const Home = () => {
   const renderItem = ({ item }) => {
     switch (item.key) {
       case 'header':
-        return <Header />;
+        return <Header searchQuery={searchQuery} onSearch={setSearchQuery} />;
       case 'slider':
         return <Sliders sliderList={sliderList} />;
       case 'categories':
@@ -69,7 +74,7 @@ const Home = () => {
       case 'location':
         return <CityLocation />;
       case 'latestItems':
-        return <LatestItemList latestItemList={latestItemList} />;
+        return <LatestItemList latestItemList={filteredItems} />;
       default:
         return null;
     }
