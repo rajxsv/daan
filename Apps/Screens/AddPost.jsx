@@ -108,7 +108,6 @@ const AddPost = () => {
             userName: "",
             userEmail: "",
             userImage: "",
-            userId: "", // Added userId to initialValues
             createdAt: Date.now(),
           }}
           onSubmit={(value) => onSubmitMethod(value)}

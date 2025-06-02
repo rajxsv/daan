@@ -40,7 +40,7 @@ export default function HomeScreenNavigation() {
       />
       {/* Chat Screen */}
       <Stack.Screen
-        name="chat-screen"
+        name="ChatScreen"
         component={ChatScreen}
         options={{
           headerStyle: {
